@@ -21,7 +21,8 @@ class ToyRequest
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY, enumType: ToyRequestStatus::class)]
+    // Ne pas utiliser Types::ARRAY_SIMPLE, car il ne gère pas les enums
+    #[ORM\Column(type: Types::JSON)]
     private array $status = [];
 
     public function getId(): ?int
@@ -58,7 +59,7 @@ class ToyRequest
      */
     public function getStatus(): array
     {
-        return $this->status;
+        return array_map(fn ($status) => ToyRequestStatus::status($status), $this->status);
     }
 
     public function setStatus(array $status): static

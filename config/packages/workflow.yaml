@@ -1,0 +1,41 @@
+framework:
+    workflows:
+        toy_request:
+            type: 'workflow'
+            audit_trail:
+                enabled: true
+            marking_store:
+                service: 'App\Workflow\MarkingStore\ToyRequestStatusMarkingStore'
+                # type: 'method'
+                # property: 'status'
+            supports:
+                - App\Entity\ToyRequest
+            initial_marking: !php/enum App\Enum\ToyRequestStatus::REQUEST
+            places: !php/enum App\Enum\ToyRequestStatus
+
+            transitions:
+                to_pending:
+                    from: !php/enum App\Enum\ToyRequestStatus::REQUEST
+                    to:
+                        - !php/enum App\Enum\ToyRequestStatus::DAD_VALIDATION_PENDING
+                        - !php/enum App\Enum\ToyRequestStatus::MUM_VALIDATION_PENDING
+                to_dad_ok:
+                    from: !php/enum App\Enum\ToyRequestStatus::DAD_VALIDATION_PENDING
+                    to: !php/enum App\Enum\ToyRequestStatus::DAD_OK
+                    guard: "is_granted('ROLE_DAD')"
+                to_mum_ok:
+                    from: !php/enum App\Enum\ToyRequestStatus::MUM_VALIDATION_PENDING
+                    to: !php/enum App\Enum\ToyRequestStatus::MUM_OK
+                    guard: "is_granted('ROLE_MUM')"
+                to_order:
+                    from: [!php/enum App\Enum\ToyRequestStatus::DAD_OK, !php/enum App\Enum\ToyRequestStatus::MUM_OK]
+                    to: !php/enum App\Enum\ToyRequestStatus::ORDER
+                    guard: "is_granted('ROLE_PARENT')"
+                to_ordered:
+                    from: !php/enum App\Enum\ToyRequestStatus::ORDER
+                    to: !php/enum App\Enum\ToyRequestStatus::ORDERED
+                    guard: "is_granted('ROLE_PARENT')"
+                to_received:
+                    from: !php/enum App\Enum\ToyRequestStatus::ORDERED
+                    to: !php/enum App\Enum\ToyRequestStatus::RECEIVED
+                    guard: "is_granted('ROLE_PARENT')"
